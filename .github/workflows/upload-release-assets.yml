@@ -48,7 +48,7 @@ jobs:
       - name: Upload binaries to this repo release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
+          tag_name: ${{ steps.vars.outputs.tag }}
           files: |
             artifacts/**/*.exe
             artifacts/**/*.dmg

@@ -1,10 +1,15 @@
-name: Upload Release Assets (No Build)
+name: Mirror Release Assets (No Source Code)
 
 on:
   push:
     tags:
       - "v*"
   workflow_dispatch:
+    inputs:
+      source_tag:
+        description: "Source tag from shahadul878/Pokamakor-ERP (e.g. v1.0.3)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -16,12 +21,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Upload committed binaries to GitHub Release
+      - name: Resolve source tag
+        id: vars
+        run: |
+          if [ -n "${{ github.event.inputs.source_tag }}" ]; then
+            echo "tag=${{ github.event.inputs.source_tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download EXE/DMG from source repo release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          rm -rf artifacts
+          mkdir -p artifacts
+          gh release download "${{ steps.vars.outputs.tag }}" \
+            --repo "shahadul878/Pokamakor-ERP" \
+            --pattern "*.exe" \
+            --pattern "*.dmg" \
+            --dir artifacts
+          ls -al artifacts
+
+      - name: Upload binaries to this repo release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           files: |
             artifacts/**/*.exe
             artifacts/**/*.dmg
-          fail_on_unmatched_files: false
+          fail_on_unmatched_files: true
 

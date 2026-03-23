@@ -32,7 +32,9 @@ jobs:
 
       - name: Download EXE/DMG from source repo release
         env:
-          GH_TOKEN: ${{ github.token }}
+          # Use a PAT from release repo secrets if source repo is private.
+          # Create secret: SOURCE_REPO_TOKEN (repo read access).
+          GH_TOKEN: ${{ secrets.SOURCE_REPO_TOKEN || github.token }}
         run: |
           rm -rf artifacts
           mkdir -p artifacts
